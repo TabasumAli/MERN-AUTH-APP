@@ -3,10 +3,11 @@ import mongoose from 'mongoose';
 import cors  from 'cors';
 import cookieParser from 'cookie-parser';
 import 'dotenv/config.js';
-
+import connetDB from './config/mongodb.js';
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+connetDB();
 
 // Middleware
 app.use(cors());
