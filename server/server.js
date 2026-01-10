@@ -19,7 +19,7 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRouter);
 app.get('/', (req, res) => {
-    res.send('Hello from the server!');
+    res.send('Hello from the server guys!');
 });
 
 // Connect to MongoDB and start the server  

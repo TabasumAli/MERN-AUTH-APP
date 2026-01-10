@@ -5,7 +5,7 @@ import 'dotenv/config.js';
 import transporter from "../config/nodemailer.js";
 
 
-export const register = async (req, res) => {
+export const register = async (req, res) => { 
   try {
     const { name, email, password } = req.body;
 
@@ -95,5 +95,31 @@ export const logout = (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error" });
 
+  }
+}
+
+
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await UserModel.findById(userId)
+    if(user.isAccountVerified){
+      return  res.json({success: false, message: "Account is already verified"});
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.verifyOtp = otp;
+    user.verifyOtpExpiry = Date.now() + 10 * 60 * 1000;
+    await user.save();
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: 'Your Account Verification OTP',
+      text: `Hello ${user.name},\n\nYour OTP for account verification is: ${otp}\nThis OTP is valid for 10 minutes.\n\nBest regards,\nThe Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: "OTP sent to your email" });
+  }catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 }
