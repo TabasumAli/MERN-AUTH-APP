@@ -5,7 +5,7 @@ import 'dotenv/config.js';
 import transporter from "../config/nodemailer.js";
 
 
-export const register = async (req, res) => { 
+export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -40,7 +40,7 @@ export const register = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-  res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -103,8 +103,8 @@ export const sendVerifyOtp = async (req, res) => {
   try {
     const { userId } = req.body;
     const user = await UserModel.findById(userId)
-    if(user.isAccountVerified){
-      return  res.json({success: false, message: "Account is already verified"});
+    if (user.isAccountVerified) {
+      return res.json({ success: false, message: "Account is already verified" });
     }
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.verifyOtp = otp;
@@ -119,7 +119,37 @@ export const sendVerifyOtp = async (req, res) => {
 
     await transporter.sendMail(mailOptions);
     res.status(200).json({ success: true, message: "OTP sent to your email" });
-  }catch (error) {
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+
+export const verifyEmail = async (req, res) => {
+  try {
+    const { userId, otp } = req.body;
+    if (!userId || !otp) {
+      return res.status(400).json({ success: false, message: "UserId and OTP are required" });
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid User" });
+    }
+    if (user.verifyOtp == "" || user.verifyOtp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (user.verifyOtpExpiry < Date.now()) {
+      return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
+
+    user.isAccountVerified = true;
+    user.verifyOtp = "";
+    user.verifyOtpExpireAt = 0;
+    await user.save();
+    res.status(200).json({ success: true, message: "Account verified successfully" });
+  }
+  catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 }
