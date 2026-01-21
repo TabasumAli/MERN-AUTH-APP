@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import 'dotenv/config.js';
 import transporter from "../config/nodemailer.js";
+import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from "../config/emailTemplates.js";     
 
 
 export const register = async (req, res) => {
@@ -123,7 +124,8 @@ export const sendVerifyOtp = async (req, res) => {
       from: process.env.SENDER_EMAIL,
       to: user.email,
       subject: 'Your Account Verification OTP',
-      text: `Hello ${user.name},\n\nYour OTP for account verification is: ${otp}`
+      text: `Hello ${user.name},\n\nYour OTP for account verification is: ${otp}`,
+      html: EMAIL_VERIFY_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
     });
 
     res.status(200).json({ success: true, message: "OTP sent to your email" });
@@ -197,8 +199,9 @@ export const sendResetOtp = async (req, res) => {
     await transporter.sendMail({
       from: process.env.SENDER_EMAIL,
       to: user.email,
-      subject: 'Your Password Reset OTP',
-      text: `Hello ${user.name},\n\nYour OTP for password reset is: ${otp}`
+      subject: 'Password Reset OTP',
+      text: `Hello ${user.name},\n\nYour OTP for password reset is: ${otp}`,
+      html: PASSWORD_RESET_TEMPLATE.replace("{{otp}}", otp).replace("{{email}}", user.email)
     });
 
     res.status(200).json({ message: "OTP sent to your email" });
